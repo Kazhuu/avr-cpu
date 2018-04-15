@@ -72,7 +72,7 @@ architecture behavioral of avr_fpga is
   signal we_cpu_io : std_logic;
   signal tx_io : std_logic;
 
-  -- Signals for inner logic connections and logic.
+  -- Signals for inner logic connections.
   signal seven_seg_io : std_logic_vector(6 downto 0);
   signal seven_seg_7seg : std_logic_vector(6 downto 0);
 
