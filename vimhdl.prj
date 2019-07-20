@@ -4,3 +4,6 @@ target_dir = .build
 vhdl work src/avr_fpga.vhd -2008
 vhdl work src/cpu_core.vhd -2008
 vhdl work src/opcode_fetch.vhd -2008
+vhdl work src/register_pair.vhd -2008
+
+vhdl work test/register_pair_tb.vhd -2008

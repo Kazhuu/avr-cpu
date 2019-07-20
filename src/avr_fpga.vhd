@@ -20,14 +20,14 @@ architecture behavioral of avr_fpga is
         port(
             clk : in std_logic;
             rst_n : in std_logic;
-            int_vec_in : in std_logic_vector(5 downto 0);
-            d_in : in std_logic_vector(7 downto 0);
+            interrupt_vector : in std_logic_vector(5 downto 0);
+            data_sel : in std_logic_vector(7 downto 0);
             opc_out : out std_logic_vector(15 downto 0);
-            pc_out : out std_logic_vector(15 downto 0);
-            d_out : out std_logic_vector(7 downto 0);
-            adr_io_out : out std_logic_vector(7 downto 0);
-            rd_io_out : out std_logic;
-            we_io_out : out std_logic
+            program_counter : out std_logic_vector(15 downto 0);
+            data : out std_logic_vector(7 downto 0);
+            adr_io : out std_logic_vector(7 downto 0);
+            read_enable_io : out std_logic;
+            write_enable_io : out std_logic
         );
     end component;
 

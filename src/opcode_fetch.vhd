@@ -7,10 +7,10 @@ entity opcode_fetch is
   port (
     clk        : in  std_logic;
     rst_n      : in  std_logic;
-    int_vec_in : in  std_logic_vector(5 downto 0);
-    load_pc_in : in  std_logic;
-    new_pc_in  : in  std_logic_vector(15 downto 0);
-    pm_adr     : in  std_logic_vector(11 downto 0);
+    interrupt_vector : in  std_logic_vector(5 downto 0);
+    load_pc : in  std_logic;
+    new_pc  : in  std_logic_vector(15 downto 0);
+    program_mem_adr     : in  std_logic_vector(11 downto 0);
     skip_in    : in  std_logic;
     opc_out    : out std_logic_vector(31 downto 0);
     pc_out     : out std_logic_vector(15 downto 0);
