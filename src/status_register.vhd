@@ -1,7 +1,17 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-
+/*
+Status register containing following bits:
+0 (C): Carry Flag
+1 (Z): Zero Flag
+2 (N): Negative Flag
+3 (V): Two’s complement overflow indicator
+4 (S): N ⊕ V, for signed tests
+5 (H): Half Carry Flag
+6 (T): Transfer bit used by BLD and BST instructions
+7 (I): Global Interrupt Enable/Disable Flag
+*/
 entity status_register is
     port(
         clk : in std_logic;
