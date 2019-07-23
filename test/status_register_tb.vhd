@@ -3,6 +3,7 @@ library vunit_lib;
 library osvvm;
 
 use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 use osvvm.TbUtilPkg.all;
 context vunit_lib.vunit_context;
 
@@ -39,6 +40,7 @@ begin
 
     test_runner : process
         variable expected_current_value : std_logic_vector(7 downto 0);
+        variable status_reg_bit_index : std_logic_vector(2 downto 0) := "000";
     begin
         test_runner_setup(runner, runner_cfg);
         while test_suite loop
@@ -63,15 +65,44 @@ begin
 
                 check_equal(current_value, alu_result);
             elsif run("branch_carry_flag_set") then
-                io_result <= "10000001";
+                io_result <= "00000001";
+                write_io_result <= '1';
+                wait until rising_edge(clk);
+                branch_condition(2 downto 0) <= "000";
+                branch_condition(3) <= '0';
+                wait for 1 ps;
+
+                check_equal(branch_valid, '1');
+            elsif run("branch_carry_flag_cleared") then
+                io_result <= "11111110";
                 write_io_result <= '1';
                 wait until rising_edge(clk);
                 branch_condition(2 downto 0) <= "000";
                 branch_condition(3) <= '1';
                 wait for 1 ps;
 
-                -- TODO: Not working yet.
                 check_equal(branch_valid, '1');
+            elsif run("branch_zero_flag_set") then
+                io_result <= "00000010";
+                write_io_result <= '1';
+                wait until rising_edge(clk);
+                branch_condition(2 downto 0) <= "001";
+                branch_condition(3) <= '0';
+                wait for 1 ps;
+
+                check_equal(branch_valid, '1');
+            elsif run("branch_on_set") then
+                write_io_result <= '0';
+                for i in 0 to 7 loop
+                    io_result <= (i => '1', others => '0');
+                    wait until rising_edge(clk);
+                    branch_condition(2 downto 0) <= std_logic_vector(to_unsigned(i, 3));
+                    branch_condition(3) <= '0';
+                    wait for 1 ps;
+                    -- TODO: Not working yet.
+
+                    check_equal(branch_valid, '0');
+                end loop;
             end if;
         end loop;
         test_runner_cleanup(runner);

@@ -27,6 +27,13 @@ end entity;
 
 
 architecture behavioral of status_register is
+    constant CARRY_FLAG : std_logic_vector(2 downto 0) := "000";
+    constant ZERO_FLAG : std_logic_vector(2 downto 0) := "001";
+    constant NEGATIVE_FLAG : std_logic_vector(2 downto 0) := "010";
+    constant OVERFLOW_FLAG : std_logic_vector(2 downto 0) := "011";
+    constant N_V_SIGNED_FLAG : std_logic_vector(2 downto 0) := "100";
+    constant HALF_CARRY_FLAG : std_logic_vector(2 downto 0) := "101";
+    constant TRANSFER_FLAG : std_logic_vector(2 downto 0) := "110";
     signal reg : std_logic_vector(7 downto 0);
 begin
     process(clk)
@@ -43,17 +50,16 @@ begin
     branching: process(branch_condition, reg)
     begin
         case branch_condition(2 downto 0) is
-            when "000"  => branch_valid <= reg(0) xor branch_condition(3);
-            when "001"  => branch_valid <= reg(1) xor branch_condition(3);
-            when "010"  => branch_valid <= reg(2) xor branch_condition(3);
-            when "011"  => branch_valid <= reg(3) xor branch_condition(3);
-            when "100"  => branch_valid <= reg(4) xor branch_condition(3);
-            when "101"  => branch_valid <= reg(5) xor branch_condition(3);
-            when "110"  => branch_valid <= reg(6) xor branch_condition(3);
+            when CARRY_FLAG => branch_valid <= reg(0) xor branch_condition(3);
+            when ZERO_FLAG => branch_valid <= reg(1) xor branch_condition(3);
+            when NEGATIVE_FLAG => branch_valid <= reg(2) xor branch_condition(3);
+            when OVERFLOW_FLAG => branch_valid <= reg(3) xor branch_condition(3);
+            when N_V_SIGNED_FLAG => branch_valid <= reg(4) xor branch_condition(3);
+            when HALF_CARRY_FLAG => branch_valid <= reg(5) xor branch_condition(3);
+            when TRANSFER_FLAG => branch_valid <= reg(6) xor branch_condition(3);
             when others => branch_valid <= reg(7) xor branch_condition(3);
         end case;
     end process;
 
     current_value <= reg;
 end architecture;
-
