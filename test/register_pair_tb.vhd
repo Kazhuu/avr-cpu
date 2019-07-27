@@ -38,10 +38,24 @@ begin
                 expected_current_value := x"7777";
 
                 check_equal(current_value, expected_current_value);
-            elsif run("write_value_and_read") then
+            elsif run("write_both_registers_and_read") then
                 new_value <= x"1234";
                 write_enable <= "11";
                 wait until rising_edge(clk); -- write values on this edge
+                wait until falling_edge(clk);
+
+                check_equal(current_value, new_value);
+            elsif run("write_even_register_and_read") then
+                new_value <= x"7712";
+                write_enable <= "01";
+                wait until rising_edge(clk);
+                wait until falling_edge(clk);
+
+                check_equal(current_value, new_value);
+            elsif run("write_odd_register_and_read") then
+                new_value <= x"1277";
+                write_enable <= "10";
+                wait until rising_edge(clk);
                 wait until falling_edge(clk);
 
                 check_equal(current_value, new_value);
