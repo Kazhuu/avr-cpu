@@ -82,26 +82,27 @@ begin
                 wait for 1 ps;
 
                 check_equal(branch_valid, '1');
-            elsif run("branch_zero_flag_set") then
-                io_result <= "00000010";
+            elsif run("branch_on_bit_set") then
                 write_io_result <= '1';
-                wait until rising_edge(clk);
-                branch_condition(2 downto 0) <= "001";
-                branch_condition(3) <= '0';
-                wait for 1 ps;
-
-                check_equal(branch_valid, '1');
-            elsif run("branch_on_set") then
-                write_io_result <= '0';
                 for i in 0 to 7 loop
                     io_result <= (i => '1', others => '0');
                     wait until rising_edge(clk);
                     branch_condition(2 downto 0) <= std_logic_vector(to_unsigned(i, 3));
                     branch_condition(3) <= '0';
                     wait for 1 ps;
-                    -- TODO: Not working yet.
 
-                    check_equal(branch_valid, '0');
+                    check_equal(branch_valid, '1');
+                end loop;
+            elsif run("branch_on_bit_cleared") then
+                write_io_result <= '1';
+                for i in 0 to 7 loop
+                    io_result <= (i => '0', others => '1');
+                    wait until rising_edge(clk);
+                    branch_condition(2 downto 0) <= std_logic_vector(to_unsigned(i, 3));
+                    branch_condition(3) <= '1';
+                    wait for 1 ps;
+
+                    check_equal(branch_valid, '1');
                 end loop;
             end if;
         end loop;

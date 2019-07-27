@@ -47,6 +47,9 @@ begin
         end if;
     end process;
 
+    -- Branch logic for BRBS and BRBC opcodes.
+    -- Branch if Bit in SREG is Set (BRSB).
+    -- Branch if Bit in SREG is Cleared (BRSC).
     branching: process(branch_condition, reg)
     begin
         case branch_condition(2 downto 0) is
