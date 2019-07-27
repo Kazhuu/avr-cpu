@@ -6,6 +6,8 @@ vhdl work src/cpu_core.vhd -2008
 vhdl work src/opcode_fetch.vhd -2008
 vhdl work src/register_pair.vhd -2008
 vhdl work src/status_register.vhd -2008
+vhdl work src/register_file.vhd -2008
 
 vhdl work test/register_pair_tb.vhd -2008
 vhdl work test/status_register_tb.vhd -2008
+vhdl work test/register_file_tb.vhd -2008

@@ -7,7 +7,7 @@ Status register containing following bits:
 1 (Z): Zero Flag
 2 (N): Negative Flag
 3 (V): Two’s complement overflow indicator
-4 (S): N ⊕ V, for signed tests
+4 (S): N xor V, for signed tests
 5 (H): Half Carry Flag
 6 (T): Transfer bit used by BLD and BST instructions
 7 (I): Global Interrupt Enable/Disable Flag
