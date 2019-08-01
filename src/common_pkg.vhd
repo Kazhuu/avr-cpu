@@ -45,20 +45,37 @@ package common_pkg is
     -- which are the source of the address and an offset from the source.
     -- Bit 3 indicates if the address will be modified.
     -- address source
-    constant AS_SP : std_logic_vector(2 downto 0) := "000";  -- SP
-    constant AS_Z : std_logic_vector(2 downto 0) := "001";   -- Z
-    constant AS_Y : std_logic_vector(2 downto 0) := "010";   -- Y
-    constant AS_X : std_logic_vector(2 downto 0) := "011";   -- X
-    constant AS_IMM : std_logic_vector(2 downto 0) := "100"; -- IMM
+    type address_mode_t is record
+        SP : std_logic_vector(2 downto 0);
+        Z : std_logic_vector(2 downto 0);
+        Y : std_logic_vector(2 downto 0);
+        X : std_logic_vector(2 downto 0);
+        IMM : std_logic_vector(2 downto 0);
+    end record;
+
+    constant ADDRESS_MODE : address_mode_t := (
+        SP => "000",
+        Z => "001",
+        Y => "010",
+        X => "011",
+        IMM => "100"
+    );
+
+    -- TODO: Fix this.
+    type address_offset_t is record
+        AS_IS : std_logic_vector(5 downto 3) := "000";  -- as is
+        Q : std_logic_vector(5 downto 3) := "010";  -- +q
+        INC : std_logic_vector(5 downto 3) := "001";  -- +1
+        DINC : std_logic_vector(5 downto 3) := "011"; -- +2
+        d : std_logic_vector(5 downto 3) := "101";  -- -1
+        dd : std_logic_vector(5 downto 3) := "111"; -- -2
+    end record;
+
+    constant ADDRESS_OFFSET : address_offset_t := (
+
+    );
 
     -- address offset
-    constant AO_0 : std_logic_vector(5 downto 3) := "000";  -- as is
-    constant AO_Q : std_logic_vector(5 downto 3) := "010";  -- +q
-    constant AO_i : std_logic_vector(5 downto 3) := "001";  -- +1
-    constant AO_ii : std_logic_vector(5 downto 3) := "011"; -- +2
-    constant AO_d : std_logic_vector(5 downto 3) := "101";  -- -1
-    constant AO_dd : std_logic_vector(5 downto 3) := "111"; -- -2
-
     constant AM_WX : std_logic_vector(3 downto 0) := '1' & AS_X;  -- X ++ or --
     constant AM_WY : std_logic_vector(3 downto 0) := '1' & AS_Y;  -- Y ++ or --
     constant AM_WZ : std_logic_vector(3 downto 0) := '1' & AS_Z;  -- Z ++ or --
