@@ -41,45 +41,67 @@ package common_pkg is
     constant PC_SKIP_Z : std_logic_vector(2 downto 0) := "101"; -- SKIP if Z
     constant PC_SKIP_T : std_logic_vector(2 downto 0) := "110"; -- SKIP if T
 
-    -- Addressing modes. An address mode consists of two sub-fields,
-    -- which are the source of the address and an offset from the source.
-    -- Bit 3 indicates if the address will be modified.
-    -- address source
-    type address_mode_t is record
-        SP : std_logic_vector(2 downto 0);
+    /*
+    Addressing mode source which is used for the end address calculation.
+    Possible sources are Z, Y, X, stack pointer or immediate value from the
+    opcode.
+    */
+    type address_source_t is record
         Z : std_logic_vector(2 downto 0);
         Y : std_logic_vector(2 downto 0);
         X : std_logic_vector(2 downto 0);
-        IMM : std_logic_vector(2 downto 0);
+        SP : std_logic_vector(2 downto 0);
+        IMMEDIATE : std_logic_vector(2 downto 0);
     end record;
 
-    constant ADDRESS_MODE : address_mode_t := (
-        SP => "000",
+    constant ADDRESS_SOURCE : address_source_t := (
         Z => "001",
         Y => "010",
         X => "011",
-        IMM => "100"
+        SP => "000",
+        IMMEDIATE => "100"
     );
 
-    -- TODO: Fix this.
+    /*
+    Addressing mode offset is used to modify the source value as a side effect.
+    Possible side effects are as is, add value from opcode, add 1 or 2, minus 1
+    or 2.
+    */
     type address_offset_t is record
-        AS_IS : std_logic_vector(5 downto 3) := "000";  -- as is
-        Q : std_logic_vector(5 downto 3) := "010";  -- +q
-        INC : std_logic_vector(5 downto 3) := "001";  -- +1
-        DINC : std_logic_vector(5 downto 3) := "011"; -- +2
-        d : std_logic_vector(5 downto 3) := "101";  -- -1
-        dd : std_logic_vector(5 downto 3) := "111"; -- -2
+        AS_IS : std_logic_vector(5 downto 3);
+        PLUS_VALUE : std_logic_vector(5 downto 3);
+        PLUS1 : std_logic_vector(5 downto 3);
+        PLUS2 : std_logic_vector(5 downto 3);
+        MINUS1 : std_logic_vector(5 downto 3);
+        MINUS2 : std_logic_vector(5 downto 3);
     end record;
 
     constant ADDRESS_OFFSET : address_offset_t := (
-
+        AS_IS => "000",
+        PLUS_VALUE => "010",
+        PLUS1 => "001",
+        PLUS2 => "011",
+        MINUS1 => "101",
+        MINUS2 => "111"
     );
 
-    -- address offset
-    constant AM_WX : std_logic_vector(3 downto 0) := '1' & AS_X;  -- X ++ or --
-    constant AM_WY : std_logic_vector(3 downto 0) := '1' & AS_Y;  -- Y ++ or --
-    constant AM_WZ : std_logic_vector(3 downto 0) := '1' & AS_Z;  -- Z ++ or --
-    constant AM_WS : std_logic_vector(3 downto 0) := '1' & AS_SP; -- SP ++/--
+    /*
+    Constant to indicate if addressing source will be updated as a side
+    effect.
+    */
+    type update_source_t is record
+        X : std_logic_vector(3 downto 0); -- X++ or --
+        Y : std_logic_vector(3 downto 0); -- Y++ or --
+        Z : std_logic_vector(3 downto 0); -- Z++ or --
+        SP : std_logic_vector(3 downto 0); -- SP++/--
+    end record;
+
+    constant UPDATE_SOURCE : update_source_t := (
+        X => '1' & ADDRESS_SOURCE.X,
+        Y => '1' & ADDRESS_SOURCE.Y,
+        Z => '1' & ADDRESS_SOURCE.Z,
+        SP => '1' & ADDRESS_SOURCE.SP
+    );
 
     -- address modes used
     constant AMOD_ABS : std_logic_vector(5 downto 0) := AO_0 & AS_IMM;  -- IMM
