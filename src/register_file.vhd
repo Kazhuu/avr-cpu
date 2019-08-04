@@ -11,7 +11,7 @@ entity register_file is
         first_reg : in std_logic_vector(4 downto 0);
         new_value : in std_logic_vector(15 downto 0);
         alu_result : in std_logic_vector(7 downto 0);
-        imm : in std_logic_vector(15 downto 0);
+        immediate : in std_logic_vector(15 downto 0);
         second_reg : in std_logic_vector(4 downto 1);
         write_register01 : in std_logic;
         write_new_value : in std_logic_vector(1 downto 0);
@@ -52,7 +52,7 @@ architecture behavioral of register_file is
     signal status_register : std_logic_vector( 7 downto 0);
 
     signal register_address : std_logic_vector(15 downto 0);
-    signal l_base : std_logic_vector(15 downto 0);
+    signal addressing_base_value : std_logic_vector(15 downto 0);
     alias even_address : std_logic_vector(4 downto 1) is first_reg(4 downto 1);
     signal new_stack_pointer_value : std_logic_vector(15 downto 0);
     signal l_dx : std_logic_vector(15 downto 0);
@@ -275,54 +275,55 @@ begin
         end case;
     end process;
 
-    -- the base value of the x/y/z/sp register as per addressing_mode.
-    --
-    process(addressing_mode(2 downto 0), i_imm, r_sp, r_r26, r_r28, r_r30)
+    -- Base value assignment for addressing mode. Base value can come from
+    -- registers x, y, z, stack pointer or immediate value.
+    process(addressing_mode(2 downto 0), immediate, stack_pointer_register,
+        register26, register28, register30)
     begin
         case addressing_mode(2 downto 0) is
-            when as_sp  => l_base <= r_sp;
-            when as_z   => l_base <= r_r30;
-            when as_y   => l_base <= r_r28;
-            when as_x   => l_base <= r_r26;
-            when as_imm => l_base <= i_imm;
-            when others => l_base <= x"0000";
+            when ADDRESS_SOURCE.X => addressing_base_value <= register26;
+            when ADDRESS_SOURCE.Y => addressing_base_value <= register28;
+            when ADDRESS_SOURCE.Z => addressing_base_value <= register30;
+            when ADDRESS_SOURCE.SP => addressing_base_value <= stack_pointer_register;
+            when ADDRESS_SOURCE.IMMEDIATE => addressing_base_value <= immediate;
+            when others => addressing_base_value <= x"0000";
         end case;
     end process;
 
     -- the value of the x/y/z/sp register after a potential pre-inc/decrement
     -- (by 1 or 2) and post-inc/decrement (by 1 or 2).
-    --
-    process(addressing_mode, i_imm)
+    process(addressing_mode, immediate)
     begin
         case addressing_mode is
-            when amod_xq | amod_yq | amod_zq  =>
-                l_pre <= i_imm;      l_post <= x"0000";
-
+            when ADDRESSING_MODES.X_ADD_VAL =>
+                l_pre <= immediate;
+                l_post <= x"0000";
             when amod_xi | amod_yi | amod_zi  =>
-                l_pre <= x"0000";    l_post <= x"0001";
-
-            when amod_dx  | amod_dy  | amod_dz  =>
-                l_pre <= x"ffff";    l_post <= x"ffff";
-
+                l_pre <= x"0000";
+                l_post <= x"0001";
+            when amod_dx | amod_dy | amod_dz  =>
+                l_pre <= x"ffff";
+                l_post <= x"ffff";
             when amod_isp =>
-                l_pre <= x"0001";    l_post <= x"0001";
-
+                l_pre <= x"0001";
+                l_post <= x"0001";
             when amod_iisp=>
-                l_pre <= x"0001";    l_post <= x"0002";
-
+                l_pre <= x"0001";
+                l_post <= x"0002";
             when amod_spd =>
-                l_pre <= x"0000";    l_post <= x"ffff";
-
+                l_pre <= x"0000";
+                l_post <= x"ffff";
             when amod_spdd=>
-                l_pre <= x"ffff";    l_post <= x"fffe";
-
+                l_pre <= x"ffff";
+                l_post <= x"fffe";
             when others =>
-                l_pre <= x"0000";    l_post <= x"0000";
+                l_pre <= x"0000";
+                l_post <= x"0000";
         end case;
     end process;
 
-    xyzsp_new_value <= l_base + l_post;
-    register_address <= l_base + l_pre;
+    xyzsp_new_value <= addressing_base_value + l_post;
+    register_address <= addressing_base_value + l_pre;
 
     write_register_address <= write_memory when register_address(15 downto 5) = "00000000000" else '0';
     write_status_register <= write_memory when register_address = x"005F" else '0';
@@ -337,13 +338,10 @@ begin
         when addressing_mode(3 downto 0) = am_ws
         else new_value;
 
-    /*
-    Write enable signals for all 8 bit general purpose registers. If firts_reg
-    matches register address then it will be written.
-
-    TODO: Add register address to constants instead of hard codes values.
-    TODO: Possible to use generate statements to dry up this code?
-    */
+    -- Write enable signals for all 8 bit general purpose registers. If firts_reg
+    -- matches register address then it will be written.
+    -- TODO: Add register address to constants instead of hard codes values.
+    -- TODO: Possible to use generate statements to dry up this code?
     write_registers(0) <= write_new_value(0) when (first_reg = "00000") else '0';
     write_registers(1) <= write_new_value(0) when (first_reg = "00001") else '0';
     write_registers(2) <= write_new_value(0) when (first_reg = "00010") else '0';
@@ -377,11 +375,9 @@ begin
     write_registers(30) <= write_new_value(0) when (first_reg = "11110") else '0';
     write_registers(31) <= write_new_value(0) when (first_reg = "11111") else '0';
 
-    /*
-    Write enable signals for 16 bit register pairs. Even address is used for
-    writing register pairs.
-    TODO: Use constants instead of hard coded values.
-    */
+    -- Write enable signals for 16 bit register pairs. Even address is used for
+    -- writing register pairs.
+    -- TODO: Use constants instead of hard coded values.
     write_register_pair <= write_new_value(1) & write_new_value(1);
     write_register_pairs(1 downto 0) <= write_register_pair when even_address = "0000" else "00";
     write_register_pairs(3 downto 2) <= write_register_pair when even_address = "0001" else "00";
@@ -400,9 +396,7 @@ begin
     write_register_pairs(29 downto 28) <= write_register_pair when even_address = "1110" else "00";
     write_register_pairs(31 downto 30) <= write_register_pair when even_address = "1111" else "00";
 
-    /*
-    Write to memory mapped IO space pointed by register address.
-    */
+    -- Write to memory mapped IO space pointed by register address.
     write_io_registers(0) <= write_register_address when register_address(4 downto 0) = "00000" else '0';
     write_io_registers(1) <= write_register_address when register_address(4 downto 0) = "00001" else '0';
     write_io_registers(2) <= write_register_address when register_address(4 downto 0) = "00010" else '0';
@@ -442,9 +436,9 @@ begin
     -- 4c. write_xyzs for y (register pairs 28/29) and addressing_mode matches
     -- 4d. write_xyzs for z (register pairs 30/31) and addressing_mode matches
     --
-    write_x <= write_xyzs when (addressing_mode(3 downto 0) = am_wx) else '0';
-    write_y <= write_xyzs when (addressing_mode(3 downto 0) = am_wy) else '0';
-    write_z <= write_xyzs when (addressing_mode(3 downto 0) = am_wz) else '0';
+    write_x <= write_xyzs when addressing_mode(3 downto 0) = UPDATE_SOURCE.X else '0';
+    write_y <= write_xyzs when addressing_mode(3 downto 0) = UPDATE_SOURCE.Y else '0';
+    write_z <= write_xyzs when addressing_mode(3 downto 0) = UPDATE_SOURCE.Z else '0';
     write_misc <= write_z & write_z &                 -- -z and z+ address modes  r30
                  write_y & write_y &                  -- -y and y+ address modes  r28
                  write_x & write_x &                  -- -x and x+ address modes  r26
@@ -455,7 +449,7 @@ begin
 
     q_s <= l_s( 7 downto 0) when (register_address(0) = '0') else l_s(15 downto 8);
     q_flags <= s_flags;
-    q_z <= r_r30;
+    q_z <= register30;
     q_adr <= register_address;
 
 end architecture;

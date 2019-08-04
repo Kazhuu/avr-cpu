@@ -106,7 +106,7 @@ package common_pkg is
     /*
     Different addressing modes which can be used in the design.
     */
-    type addressing_mode_t is record
+    type addressing_modes_t is record
         ABSOLUTE : std_logic_vector(5 downto 0);   -- immediate
         X : std_logic_vector(5 downto 0);          -- X
         X_ADD_VAL : std_logic_vector(5 downto 0);  -- X+q
@@ -126,7 +126,10 @@ package common_pkg is
         SP_DEC_2 : std_logic_vector(5 downto 0);   -- SP--
     end record;
 
-    constant ADDRESSING_MODE : addressing_mode_t := (
+    constant X_ADD_VAL : std_logic_vector(5 downto 0) :=
+    ADDRESS_OFFSET.ADD_VALUE & ADDRESS_SOURCE.X;
+
+    constant ADDRESSING_MODES : addressing_modes_t := (
         ABSOLUTE => ADDRESS_OFFSET.AS_IS & ADDRESS_SOURCE.IMMEDIATE,
         X => ADDRESS_OFFSET.AS_IS & ADDRESS_SOURCE.X,
         X_ADD_VAL => ADDRESS_OFFSET.ADD_VALUE & ADDRESS_SOURCE.X,
