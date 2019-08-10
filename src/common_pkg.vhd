@@ -46,106 +46,72 @@ package common_pkg is
     Possible sources are Z, Y, X, stack pointer or immediate value from the
     opcode.
     */
-    type address_source_t is record
-        Z : std_logic_vector(2 downto 0);
-        Y : std_logic_vector(2 downto 0);
-        X : std_logic_vector(2 downto 0);
-        SP : std_logic_vector(2 downto 0);
-        IMMEDIATE : std_logic_vector(2 downto 0);
-    end record;
-
-    constant ADDRESS_SOURCE : address_source_t := (
-        Z => "001",
-        Y => "010",
-        X => "011",
-        SP => "000",
-        IMMEDIATE => "100"
-    );
+    constant ADDRESS_SOURCE_SP : std_logic_vector(2 downto 0) := "000";        -- SP
+    constant ADDRESS_SOURCE_Z : std_logic_vector(2 downto 0) := "001";         -- Z
+    constant ADDRESS_SOURCE_Y : std_logic_vector(2 downto 0) := "010";         -- Y
+    constant ADDRESS_SOURCE_X : std_logic_vector(2 downto 0) := "011";         -- X
+    constant ADDRESS_SOURCE_IMMEDIATE : std_logic_vector(2 downto 0) := "100"; -- IMM
 
     /*
     Addressing mode offset is used to modify the source value as a side effect.
     Possible side effects are as is, add value from opcode, add 1 or 2, minus 1
     or 2.
     */
-    type address_offset_t is record
-        AS_IS : std_logic_vector(5 downto 3);
-        ADD_VALUE : std_logic_vector(5 downto 3);
-        ADD_1 : std_logic_vector(5 downto 3);
-        ADD_2 : std_logic_vector(5 downto 3);
-        DEC_1 : std_logic_vector(5 downto 3);
-        DEC_2 : std_logic_vector(5 downto 3);
-    end record;
-
-    constant ADDRESS_OFFSET : address_offset_t := (
-        AS_IS => "000",
-        ADD_VALUE => "010",
-        ADD_1 => "001",
-        ADD_2 => "011",
-        DEC_1 => "101",
-        DEC_2 => "111"
-    );
+    constant ADDRESS_OFFSET_AS_IS : std_logic_vector(5 downto 3) := "000";     -- as is
+    constant ADDRESS_OFFSET_ADD_VALUE : std_logic_vector(5 downto 3) := "010"; -- +q
+    constant ADDRESS_OFFSET_ADD_1 : std_logic_vector(5 downto 3) := "001";     -- +1
+    constant ADDRESS_OFFSET_ADD_2 : std_logic_vector(5 downto 3) := "011";     -- +2
+    constant ADDRESS_OFFSET_DEC_1 : std_logic_vector(5 downto 3) := "101";     -- -1
+    constant ADDRESS_OFFSET_DEC_2 : std_logic_vector(5 downto 3) := "111";     -- -2
 
     /*
     Constant to indicate if addressing source will be updated as a side
     effect.
     */
-    type update_source_t is record
-        X : std_logic_vector(3 downto 0);  -- X++ or --
-        Y : std_logic_vector(3 downto 0);  -- Y++ or --
-        Z : std_logic_vector(3 downto 0);  -- Z++ or --
-        SP : std_logic_vector(3 downto 0); -- SP++/--
-    end record;
-
-    constant UPDATE_SOURCE : update_source_t := (
-        X => '1' & ADDRESS_SOURCE.X,
-        Y => '1' & ADDRESS_SOURCE.Y,
-        Z => '1' & ADDRESS_SOURCE.Z,
-        SP => '1' & ADDRESS_SOURCE.SP
-    );
+    constant UPDATE_SOURCE_X : std_logic_vector(3 downto 0) :=
+        '1' & ADDRESS_SOURCE_X;  -- X ++ or --
+    constant UPDATE_SOURCE_Y : std_logic_vector(3 downto 0) :=
+        '1' & ADDRESS_SOURCE_Y;  -- Y ++ or --
+    constant UPDATE_SOURCE_Z : std_logic_vector(3 downto 0) :=
+        '1' & ADDRESS_SOURCE_Z;  -- Z ++ or --
+    constant UPDATE_SOURCE_SP : std_logic_vector(3 downto 0) :=
+        '1' & ADDRESS_SOURCE_SP; -- SP ++/--
 
     /*
     Different addressing modes which can be used in the design.
     */
-    type addressing_modes_t is record
-        ABSOLUTE : std_logic_vector(5 downto 0);   -- immediate
-        X : std_logic_vector(5 downto 0);          -- X
-        X_ADD_VAL : std_logic_vector(5 downto 0);  -- X+q
-        X_POST_INC : std_logic_vector(5 downto 0); -- X+
-        X_PRE_DEC : std_logic_vector(5 downto 0);  -- -X
-        Y : std_logic_vector(5 downto 0);          -- Y
-        Y_ADD_VAL : std_logic_vector(5 downto 0);  -- Y+q
-        Y_POST_INC : std_logic_vector(5 downto 0); -- Y+
-        Y_PRE_DEC : std_logic_vector(5 downto 0);  -- -Y
-        Z : std_logic_vector(5 downto 0);          -- Z
-        Z_ADD_VAL : std_logic_vector(5 downto 0);  -- Z+q
-        Z_POST_INC : std_logic_vector(5 downto 0); -- Z+
-        Z_PRE_DEC : std_logic_vector(5 downto 0);  -- -Z
-        SP_ADD_1 : std_logic_vector(5 downto 0);   -- +SP
-        SP_ADD_2 : std_logic_vector(5 downto 0);   -- ++SP
-        SP_DEC_1 : std_logic_vector(5 downto 0);   -- SP-
-        SP_DEC_2 : std_logic_vector(5 downto 0);   -- SP--
-    end record;
-
-    constant X_ADD_VAL : std_logic_vector(5 downto 0) :=
-    ADDRESS_OFFSET.ADD_VALUE & ADDRESS_SOURCE.X;
-
-    constant ADDRESSING_MODES : addressing_modes_t := (
-        ABSOLUTE => ADDRESS_OFFSET.AS_IS & ADDRESS_SOURCE.IMMEDIATE,
-        X => ADDRESS_OFFSET.AS_IS & ADDRESS_SOURCE.X,
-        X_ADD_VAL => ADDRESS_OFFSET.ADD_VALUE & ADDRESS_SOURCE.X,
-        X_POST_INC => ADDRESS_OFFSET.ADD_1 & ADDRESS_SOURCE.X,
-        X_PRE_DEC => ADDRESS_OFFSET.DEC_1 & ADDRESS_SOURCE.X,
-        Y => ADDRESS_OFFSET.AS_IS & ADDRESS_SOURCE.Y,
-        Y_ADD_VAL => ADDRESS_OFFSET.AS_IS & ADDRESS_SOURCE.Y,
-        Y_POST_INC => ADDRESS_OFFSET.ADD_1 & ADDRESS_SOURCE.Y,
-        Y_PRE_DEC => ADDRESS_OFFSET.DEC_1 & ADDRESS_SOURCE.Y,
-        Z => ADDRESS_OFFSET.AS_IS & ADDRESS_SOURCE.Z,
-        Z_ADD_VAL => ADDRESS_OFFSET.AS_IS & ADDRESS_SOURCE.Z,
-        Z_POST_INC => ADDRESS_OFFSET.ADD_1 & ADDRESS_SOURCE.Z,
-        Z_PRE_DEC => ADDRESS_OFFSET.DEC_1 & ADDRESS_SOURCE.Z,
-        SP_ADD_1 => ADDRESS_OFFSET.ADD_1 & ADDRESS_SOURCE.SP,
-        SP_ADD_2 => ADDRESS_OFFSET.ADD_2 & ADDRESS_SOURCE.SP,
-        SP_DEC_1 => ADDRESS_OFFSET.DEC_1 & ADDRESS_SOURCE.SP,
-        SP_DEC_2 => ADDRESS_OFFSET.DEC_2 & ADDRESS_SOURCE.SP
-    );
+    constant ADDRESSING_MODE_ABSOLUTE : std_logic_vector(5 downto 0) :=
+        ADDRESS_OFFSET.AS_IS & ADDRESS_SOURCE.IMMEDIATE; -- immediate
+    constant ADDRESSING_MODE_X : std_logic_vector(5 downto 0) :=
+        ADDRESS_OFFSET.AS_IS & ADDRESS_SOURCE.X;         -- X
+    constant ADDRESSING_MODE_X_ADD_VAL : std_logic_vector(5 downto 0) :=
+        ADDRESS_OFFSET.ADD_VALUE & ADDRESS_SOURCE.X;     -- X+q
+    constant ADDRESSING_MODE_X_POST_INC : std_logic_vector(5 downto 0) :=
+        ADDRESS_OFFSET.ADD_1 & ADDRESS_SOURCE.X;         -- X+
+    constant ADDRESSING_MODE_X_PRE_DEC : std_logic_vector(5 downto 0) :=
+        ADDRESS_OFFSET.DEC_1 & ADDRESS_SOURCE.X;         -- -X
+    constant ADDRESSING_MODE_Y : std_logic_vector(5 downto 0) :=
+        ADDRESS_OFFSET.AS_IS & ADDRESS_SOURCE.Y;         -- Y
+    constant ADDRESSING_MODE_Y_ADD_VAL : std_logic_vector(5 downto 0) :=
+        ADDRESS_OFFSET.AS_IS & ADDRESS_SOURCE.Y;         -- Y+q
+    constant ADDRESSING_MODE_Y_POST_INC : std_logic_vector(5 downto 0) :=
+        ADDRESS_OFFSET.ADD_1 & ADDRESS_SOURCE.Y;         -- Y+
+    constant ADDRESSING_MODE_Y_PRE_DEC : std_logic_vector(5 downto 0) :=
+        ADDRESS_OFFSET.DEC_1 & ADDRESS_SOURCE.Y;         -- -Y
+    constant ADDRESSING_MODE_Z : std_logic_vector(5 downto 0) :=
+        ADDRESS_OFFSET.AS_IS & ADDRESS_SOURCE.Z;         -- Z
+    constant ADDRESSING_MODE_Z_ADD_VAL : std_logic_vector(5 downto 0) :=
+        ADDRESS_OFFSET.AS_IS & ADDRESS_SOURCE.Z;         -- Z+q
+    constant ADDRESSING_MODE_Z_POST_INC : std_logic_vector(5 downto 0) :=
+        ADDRESS_OFFSET.ADD_1 & ADDRESS_SOURCE.Z;         -- Z+
+    constant ADDRESSING_MODE_Z_PRE_DEC : std_logic_vector(5 downto 0) :=
+        ADDRESS_OFFSET.DEC_1 & ADDRESS_SOURCE.Z;         -- -Z
+    constant ADDRESSING_MODE_SP_ADD_1 : std_logic_vector(5 downto 0) :=
+        ADDRESS_OFFSET.ADD_1 & ADDRESS_SOURCE.SP;        -- +SP
+    constant ADDRESSING_MODE_SP_ADD_2 : std_logic_vector(5 downto 0) :=
+        ADDRESS_OFFSET.ADD_2 & ADDRESS_SOURCE.SP;        -- ++SP
+    constant ADDRESSING_MODE_SP_DEC_1 : std_logic_vector(5 downto 0) :=
+        ADDRESS_OFFSET.DEC_1 & ADDRESS_SOURCE.SP;        -- SP-
+    constant ADDRESSING_MODE_SP_DEC_2 : std_logic_vector(5 downto 0) :=
+        ADDRESS_OFFSET.DEC_2 & ADDRESS_SOURCE.S;         -- SP--
 end package;

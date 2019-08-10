@@ -292,7 +292,7 @@ begin
 
     -- the value of the x/y/z/sp register after a potential pre-inc/decrement
     -- (by 1 or 2) and post-inc/decrement (by 1 or 2).
-    process(addressing_mode, immediate)
+    process(addressing_mode(5 downto 3), immediate)
     begin
         case addressing_mode is
             when ADDRESSING_MODES.X_ADD_VAL =>
