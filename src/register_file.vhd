@@ -1,5 +1,6 @@
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 use work.common_pkg.all;
 
 
@@ -58,8 +59,8 @@ architecture behavioral of register_file is
     signal l_dx : std_logic_vector(15 downto 0);
     signal l_dy : std_logic_vector(15 downto 0);
     signal l_dz : std_logic_vector(15 downto 0);
-    signal l_pre : std_logic_vector(15 downto 0);
-    signal l_post : std_logic_vector(15 downto 0);
+    signal pre_value : std_logic_vector(15 downto 0);
+    signal post_value : std_logic_vector(15 downto 0);
     signal current_register_pair_value : std_logic_vector(15 downto 0);
     signal l_we_sp_amod : std_logic;
     signal write_enable : std_logic_vector(31 downto 0);
@@ -281,49 +282,51 @@ begin
         register26, register28, register30)
     begin
         case addressing_mode(2 downto 0) is
-            when ADDRESS_SOURCE.X => addressing_base_value <= register26;
-            when ADDRESS_SOURCE.Y => addressing_base_value <= register28;
-            when ADDRESS_SOURCE.Z => addressing_base_value <= register30;
-            when ADDRESS_SOURCE.SP => addressing_base_value <= stack_pointer_register;
-            when ADDRESS_SOURCE.IMMEDIATE => addressing_base_value <= immediate;
+            when ADDRESS_SOURCE_X => addressing_base_value <= register26;
+            when ADDRESS_SOURCE_Y => addressing_base_value <= register28;
+            when ADDRESS_SOURCE_Z => addressing_base_value <= register30;
+            when ADDRESS_SOURCE_SP => addressing_base_value <= stack_pointer_register;
+            when ADDRESS_SOURCE_IMMEDIATE => addressing_base_value <= immediate;
             when others => addressing_base_value <= x"0000";
         end case;
     end process;
 
     -- the value of the x/y/z/sp register after a potential pre-inc/decrement
     -- (by 1 or 2) and post-inc/decrement (by 1 or 2).
-    process(addressing_mode(5 downto 3), immediate)
+    process(addressing_mode, immediate)
     begin
         case addressing_mode is
-            when ADDRESSING_MODES.X_ADD_VAL =>
-                l_pre <= immediate;
-                l_post <= x"0000";
-            when amod_xi | amod_yi | amod_zi  =>
-                l_pre <= x"0000";
-                l_post <= x"0001";
-            when amod_dx | amod_dy | amod_dz  =>
-                l_pre <= x"ffff";
-                l_post <= x"ffff";
-            when amod_isp =>
-                l_pre <= x"0001";
-                l_post <= x"0001";
-            when amod_iisp=>
-                l_pre <= x"0001";
-                l_post <= x"0002";
-            when amod_spd =>
-                l_pre <= x"0000";
-                l_post <= x"ffff";
-            when amod_spdd=>
-                l_pre <= x"ffff";
-                l_post <= x"fffe";
+            when MODE_X_ADD_VAL | MODE_Y_ADD_VAL | MODE_Z_ADD_VAL =>
+                pre_value <= immediate;
+                post_value <= x"0000";
+            when MODE_X_POST_INC | MODE_Y_POST_INC | MODE_Z_POST_INC =>
+                pre_value <= x"0000";
+                post_value <= x"0001";
+            when MODE_X_PRE_DEC | MODE_Y_PRE_DEC | MODE_Z_PRE_DEC =>
+                pre_value <= x"ffff";
+                post_value <= x"ffff";
+            when MODE_SP_ADD_1 =>
+                pre_value <= x"0001";
+                post_value <= x"0001";
+            when MODE_SP_ADD_2 =>
+                pre_value <= x"0001";
+                post_value <= x"0002";
+            when MODE_SP_DEC_1 =>
+                pre_value <= x"0000";
+                post_value <= x"ffff";
+            when MODE_SP_DEC_2 =>
+                pre_value <= x"ffff";
+                post_value <= x"fffe";
             when others =>
-                l_pre <= x"0000";
-                l_post <= x"0000";
+                pre_value <= x"0000";
+                post_value <= x"0000";
         end case;
     end process;
 
-    xyzsp_new_value <= addressing_base_value + l_post;
-    register_address <= addressing_base_value + l_pre;
+    xyzsp_new_value <=
+        std_logic_vector(signed(addressing_base_value) + signed(post_value));
+    register_address <=
+        std_logic_vector(signed(addressing_base_value) + signed(pre_value));
 
     write_register_address <= write_memory when register_address(15 downto 5) = "00000000000" else '0';
     write_status_register <= write_memory when register_address = x"005F" else '0';
@@ -436,9 +439,9 @@ begin
     -- 4c. write_xyzs for y (register pairs 28/29) and addressing_mode matches
     -- 4d. write_xyzs for z (register pairs 30/31) and addressing_mode matches
     --
-    write_x <= write_xyzs when addressing_mode(3 downto 0) = UPDATE_SOURCE.X else '0';
-    write_y <= write_xyzs when addressing_mode(3 downto 0) = UPDATE_SOURCE.Y else '0';
-    write_z <= write_xyzs when addressing_mode(3 downto 0) = UPDATE_SOURCE.Z else '0';
+    write_x <= write_xyzs when addressing_mode(3 downto 0) = UPDATE_SOURCE_X else '0';
+    write_y <= write_xyzs when addressing_mode(3 downto 0) = UPDATE_SOURCE_Y else '0';
+    write_z <= write_xyzs when addressing_mode(3 downto 0) = UPDATE_SOURCE_Z else '0';
     write_misc <= write_z & write_z &                 -- -z and z+ address modes  r30
                  write_y & write_y &                  -- -y and y+ address modes  r28
                  write_x & write_x &                  -- -x and x+ address modes  r26
