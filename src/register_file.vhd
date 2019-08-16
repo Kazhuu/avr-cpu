@@ -19,18 +19,22 @@ entity register_file is
         write_alu_result : in std_logic;
         write_memory : in std_logic;
         write_xyzs : in std_logic;
-        adr : out std_logic_vector(15 downto 0);
+        address : out std_logic_vector(15 downto 0);
         branch_valid : out std_logic;
         first_reg_value : out std_logic_vector(15 downto 0);
-        flags : out std_logic_vector(7 downto 0);
+        status_flags : out std_logic_vector(7 downto 0);
         second_reg_value : out std_logic_vector(15 downto 0);
-        s : out std_logic_vector(7 downto 0);
-        z : out std_logic_vector(15 downto 0)
+        register_value : out std_logic_vector(7 downto 0);
+        z_reg_value : out std_logic_vector(15 downto 0)
     );
 end entity;
 
 
 architecture behavioral of register_file is
+    constant STACK_POINTER_HIGH_ADDR : std_logic_vector(15 downto 0) := x"005E";
+    constant STACK_POINTER_LOW_ADDR : std_logic_vector(15 downto 0) := x"005D";
+    constant STATUS_REGISTER_ADDR : std_logic_vector(15 downto 0) := x"005F";
+
     -- 30 general purpose registers as pairs.
     signal register00 : std_logic_vector(15 downto 0);
     signal register02 : std_logic_vector(15 downto 0);
@@ -50,15 +54,15 @@ architecture behavioral of register_file is
     signal register30 : std_logic_vector(15 downto 0);
     signal stack_pointer_register : std_logic_vector(15 downto 0);
 
-    signal status_register : std_logic_vector( 7 downto 0);
+    signal status_register : std_logic_vector(7 downto 0);
 
     signal register_address : std_logic_vector(15 downto 0);
     signal addressing_base_value : std_logic_vector(15 downto 0);
     alias even_address : std_logic_vector(4 downto 1) is first_reg(4 downto 1);
     signal new_stack_pointer_value : std_logic_vector(15 downto 0);
-    signal l_dx : std_logic_vector(15 downto 0);
-    signal l_dy : std_logic_vector(15 downto 0);
-    signal l_dz : std_logic_vector(15 downto 0);
+    signal x_new_value : std_logic_vector(15 downto 0);
+    signal y_new_value : std_logic_vector(15 downto 0);
+    signal z_new_value : std_logic_vector(15 downto 0);
     signal pre_value : std_logic_vector(15 downto 0);
     signal post_value : std_logic_vector(15 downto 0);
     signal current_register_pair_value : std_logic_vector(15 downto 0);
@@ -158,19 +162,19 @@ begin
     );
     r26: entity work.register_pair
     port map(clk => clk,
-        new_value => new_value,
+        new_value => x_new_value,
         write_enable => write_enable(27 downto 26),
         current_value => register26
     );
     r28: entity work.register_pair
     port map(clk => clk,
-        new_value => new_value,
+        new_value => y_new_value,
         write_enable => write_enable(29 downto 28),
         current_value => register28
     );
     r30: entity work.register_pair
     port map(clk => clk,
-        new_value => new_value,
+        new_value => z_new_value,
         write_enable => write_enable(31 downto 30),
         current_value => register30
     );
@@ -276,8 +280,10 @@ begin
         end case;
     end process;
 
-    -- Base value assignment for addressing mode. Base value can come from
-    -- registers x, y, z, stack pointer or immediate value.
+    /*
+    Base value assignment for addressing mode. Base value can come from
+    registers x, y, z, stack pointer or immediate value.
+    */
     process(addressing_mode(2 downto 0), immediate, stack_pointer_register,
         register26, register28, register30)
     begin
@@ -291,8 +297,10 @@ begin
         end case;
     end process;
 
-    -- the value of the x/y/z/sp register after a potential pre-inc/decrement
-    -- (by 1 or 2) and post-inc/decrement (by 1 or 2).
+    /*
+    the value of the x/y/z/sp register after a potential pre-inc/decrement
+    (by 1 or 2) and post-inc/decrement (by 1 or 2).
+    */
     process(addressing_mode, immediate)
     begin
         case addressing_mode is
@@ -323,28 +331,28 @@ begin
         end case;
     end process;
 
-    xyzsp_new_value <=
-        std_logic_vector(signed(addressing_base_value) + signed(post_value));
-    register_address <=
-        std_logic_vector(signed(addressing_base_value) + signed(pre_value));
+    xyzsp_new_value <= std_logic_vector(signed(addressing_base_value) + signed(post_value));
+    register_address <= std_logic_vector(signed(addressing_base_value) + signed(pre_value));
 
     write_register_address <= write_memory when register_address(15 downto 5) = "00000000000" else '0';
-    write_status_register <= write_memory when register_address = x"005F" else '0';
-    l_we_sp_amod <= write_xyzs when (addressing_mode(2 downto 0) = as_sp) else '0';
-    l_we_sp(1) <= write_memory when register_address = x"005e" else l_we_sp_amod;
-    l_we_sp(0) <= write_memory when register_address = x"005d" else l_we_sp_amod;
+    write_status_register <= write_memory when register_address = STATUS_REGISTER_ADDR else '0';
+    l_we_sp_amod <= write_xyzs when addressing_mode(2 downto 0) = ADDRESS_SOURCE_SP else '0';
+    write_stack_pointer(1) <= write_memory when register_address = STACK_POINTER_HIGH_ADDR else l_we_sp_amod;
+    write_stack_pointer(0) <= write_memory when register_address = STACK_POINTER_LOW_ADDR else l_we_sp_amod;
 
-    l_dx <= xyzsp_new_value when write_misc(26) = '1' else new_value;
-    l_dy <= xyzsp_new_value when write_misc(28) = '1' else new_value;
-    l_dz <= xyzsp_new_value when write_misc(30) = '1' else new_value;
+    x_new_value <= xyzsp_new_value when write_misc(26) = '1' else new_value;
+    y_new_value <= xyzsp_new_value when write_misc(28) = '1' else new_value;
+    z_new_value <= xyzsp_new_value when write_misc(30) = '1' else new_value;
     new_stack_pointer_value <= xyzsp_new_value
-        when addressing_mode(3 downto 0) = am_ws
+        when addressing_mode(3 downto 0) = UPDATE_SOURCE_SP
         else new_value;
 
-    -- Write enable signals for all 8 bit general purpose registers. If firts_reg
-    -- matches register address then it will be written.
-    -- TODO: Add register address to constants instead of hard codes values.
-    -- TODO: Possible to use generate statements to dry up this code?
+    /*
+    Write enable signals for all 8 bit general purpose registers. If first_reg
+    matches register address then it will be written.
+    TODO: Add register address to constants instead of hard codes values.
+    TODO: Possible to use generate statements to dry up this code?
+    */
     write_registers(0) <= write_new_value(0) when (first_reg = "00000") else '0';
     write_registers(1) <= write_new_value(0) when (first_reg = "00001") else '0';
     write_registers(2) <= write_new_value(0) when (first_reg = "00010") else '0';
@@ -378,9 +386,11 @@ begin
     write_registers(30) <= write_new_value(0) when (first_reg = "11110") else '0';
     write_registers(31) <= write_new_value(0) when (first_reg = "11111") else '0';
 
-    -- Write enable signals for 16 bit register pairs. Even address is used for
-    -- writing register pairs.
-    -- TODO: Use constants instead of hard coded values.
+    /*
+    Write enable signals for 16 bit register pairs. Even address is used for
+    writing register pairs.
+    TODO: Use constants instead of hard coded values.
+    */
     write_register_pair <= write_new_value(1) & write_new_value(1);
     write_register_pairs(1 downto 0) <= write_register_pair when even_address = "0000" else "00";
     write_register_pairs(3 downto 2) <= write_register_pair when even_address = "0001" else "00";
@@ -433,12 +443,13 @@ begin
     write_io_registers(30) <= write_register_address when register_address(4 downto 0) = "11110" else '0';
     write_io_registers(31) <= write_register_address when register_address(4 downto 0) = "11111" else '0';
 
-    -- case 4 special cases.
-    -- 4a. write_register01 for register pair 0/1 (multiplication opcode).
-    -- 4b. write_xyzs for x (register pairs 26/27) and addressing_mode matches
-    -- 4c. write_xyzs for y (register pairs 28/29) and addressing_mode matches
-    -- 4d. write_xyzs for z (register pairs 30/31) and addressing_mode matches
-    --
+    /*
+    case 4 special cases.
+    4a. write_register01 for register pair 0/1 (multiplication opcode).
+    4b. write_xyzs for x (register pairs 26/27) and addressing_mode matches
+    4c. write_xyzs for y (register pairs 28/29) and addressing_mode matches
+    4d. write_xyzs for z (register pairs 30/31) and addressing_mode matches
+    */
     write_x <= write_xyzs when addressing_mode(3 downto 0) = UPDATE_SOURCE_X else '0';
     write_y <= write_xyzs when addressing_mode(3 downto 0) = UPDATE_SOURCE_Y else '0';
     write_z <= write_xyzs when addressing_mode(3 downto 0) = UPDATE_SOURCE_Z else '0';
@@ -450,9 +461,11 @@ begin
 
     write_enable <= write_registers or write_register_pairs or write_io_registers or write_misc;
 
-    q_s <= l_s( 7 downto 0) when (register_address(0) = '0') else l_s(15 downto 8);
-    q_flags <= s_flags;
-    q_z <= register30;
-    q_adr <= register_address;
+    register_value <= current_register_pair_value(7 downto 0)
+        when register_address(0) = '0'
+        else current_register_pair_value(15 downto 8);
+    status_flags <= status_register;
+    z_reg_value <= register30;
+    address <= register_address;
 
 end architecture;
