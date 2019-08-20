@@ -62,11 +62,48 @@ begin
     CreateClock(clk, period);
 
     test_runner : process
+        variable expected_byte : std_logic_vector(7 downto 0) := (others => '0');
+        variable expected_short : std_logic_vector(15 downto 0) := (others => '0');
     begin
         test_runner_setup(runner, runner_cfg);
         while test_suite loop
-            if run("aaa") then
-                report "aaaaaaa";
+            if run("init_state") then
+                wait for 1 ps;
+                check_equal(address, expected_short);
+                check_equal(branch_valid, 'U');
+                check_equal(first_reg_value, std_logic_vector'(x"7777"));
+                check_equal(second_reg_value, std_logic_vector'(x"7777"));
+                expected_byte := (others => 'U');
+                check_equal(status_flags, expected_byte);
+                check_equal(register_value, std_logic_vector'(x"77"));
+                check_equal(z_reg_value, std_logic_vector'(x"7777"));
+            elsif run("write_and_read_register") then
+                new_value <= x"1111";
+                first_reg <= "00001";
+                write_new_value(0) <= '1';
+                wait until rising_edge(clk);
+                wait until falling_edge(clk);
+
+                check_equal(first_reg_value, std_logic_vector'(x"1177"));
+            elsif run("write_and_read_register_pair") then
+                new_value <= x"1111";
+                first_reg <= "00001";
+                write_new_value(1) <= '1';
+                wait until rising_edge(clk);
+                wait until falling_edge(clk);
+
+                check_equal(first_reg_value, std_logic_vector'(x"1111"));
+            elsif run("read_two_registers_simultaneously") then
+                -- TODO: Finish up
+                new_value <= x"1122";
+                first_reg <= "00001";
+                second_reg <= "0002";
+                write_new_value(1) <= '1';
+                wait until rising_edge(clk);
+                wait until falling_edge(clk);
+
+                check_equal(first_reg_value, std_logic_vector'(x"1111"));
+                check_equal(second_reg_value, std_logic_vector'(x"1111"));
             end if;
         end loop;
         test_runner_cleanup(runner);

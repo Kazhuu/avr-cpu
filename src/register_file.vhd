@@ -35,7 +35,7 @@ architecture behavioral of register_file is
     constant STACK_POINTER_LOW_ADDR : std_logic_vector(15 downto 0) := x"005D";
     constant STATUS_REGISTER_ADDR : std_logic_vector(15 downto 0) := x"005F";
 
-    -- 30 general purpose registers as pairs.
+    -- Signals driven by 30 general purpose registers as pairs.
     signal register00 : std_logic_vector(15 downto 0);
     signal register02 : std_logic_vector(15 downto 0);
     signal register04 : std_logic_vector(15 downto 0);
@@ -69,8 +69,10 @@ architecture behavioral of register_file is
     signal l_we_sp_amod : std_logic;
     signal write_enable : std_logic_vector(31 downto 0);
     signal write_register_address : std_logic;
+    -- Write signal for 8-bit registers.
     signal write_registers : std_logic_vector(31 downto 0);
     signal write_register_pair : std_logic_vector(1 downto 0);
+    -- Write enable signal for writing two 8-bit registers as 16-bit registers.
     signal write_register_pairs : std_logic_vector(31 downto 0);
     signal write_io_registers : std_logic_vector(31 downto 0);
     signal write_misc : std_logic_vector(31 downto 0);
@@ -254,7 +256,7 @@ begin
         end case;
     end process;
 
-    -- Read register pair according to first_reg input signal.
+    -- Read register pair according to second_reg input signal.
     process(register00, register02, register04, register06, register08,
         register10, register12, register14, register16, register18, register20,
         register22, register24, register26, register28, register30,
@@ -353,42 +355,42 @@ begin
     TODO: Add register address to constants instead of hard codes values.
     TODO: Possible to use generate statements to dry up this code?
     */
-    write_registers(0) <= write_new_value(0) when (first_reg = "00000") else '0';
-    write_registers(1) <= write_new_value(0) when (first_reg = "00001") else '0';
-    write_registers(2) <= write_new_value(0) when (first_reg = "00010") else '0';
-    write_registers(3) <= write_new_value(0) when (first_reg = "00011") else '0';
-    write_registers(4) <= write_new_value(0) when (first_reg = "00100") else '0';
-    write_registers(5) <= write_new_value(0) when (first_reg = "00101") else '0';
-    write_registers(6) <= write_new_value(0) when (first_reg = "00110") else '0';
-    write_registers(7) <= write_new_value(0) when (first_reg = "00111") else '0';
-    write_registers(8) <= write_new_value(0) when (first_reg = "01000") else '0';
-    write_registers(9) <= write_new_value(0) when (first_reg = "01001") else '0';
-    write_registers(10) <= write_new_value(0) when (first_reg = "01010") else '0';
-    write_registers(11) <= write_new_value(0) when (first_reg = "01011") else '0';
-    write_registers(12) <= write_new_value(0) when (first_reg = "01100") else '0';
-    write_registers(13) <= write_new_value(0) when (first_reg = "01101") else '0';
-    write_registers(14) <= write_new_value(0) when (first_reg = "01110") else '0';
-    write_registers(15) <= write_new_value(0) when (first_reg = "01111") else '0';
-    write_registers(16) <= write_new_value(0) when (first_reg = "10000") else '0';
-    write_registers(17) <= write_new_value(0) when (first_reg = "10001") else '0';
-    write_registers(18) <= write_new_value(0) when (first_reg = "10010") else '0';
-    write_registers(19) <= write_new_value(0) when (first_reg = "10011") else '0';
-    write_registers(20) <= write_new_value(0) when (first_reg = "10100") else '0';
-    write_registers(21) <= write_new_value(0) when (first_reg = "10101") else '0';
-    write_registers(22) <= write_new_value(0) when (first_reg = "10110") else '0';
-    write_registers(23) <= write_new_value(0) when (first_reg = "10111") else '0';
-    write_registers(24) <= write_new_value(0) when (first_reg = "11000") else '0';
-    write_registers(25) <= write_new_value(0) when (first_reg = "11001") else '0';
-    write_registers(26) <= write_new_value(0) when (first_reg = "11010") else '0';
-    write_registers(27) <= write_new_value(0) when (first_reg = "11011") else '0';
-    write_registers(28) <= write_new_value(0) when (first_reg = "11100") else '0';
-    write_registers(29) <= write_new_value(0) when (first_reg = "11101") else '0';
-    write_registers(30) <= write_new_value(0) when (first_reg = "11110") else '0';
-    write_registers(31) <= write_new_value(0) when (first_reg = "11111") else '0';
+    write_registers(0) <= write_new_value(0) when first_reg = "00000" else '0';
+    write_registers(1) <= write_new_value(0) when first_reg = "00001" else '0';
+    write_registers(2) <= write_new_value(0) when first_reg = "00010" else '0';
+    write_registers(3) <= write_new_value(0) when first_reg = "00011" else '0';
+    write_registers(4) <= write_new_value(0) when first_reg = "00100" else '0';
+    write_registers(5) <= write_new_value(0) when first_reg = "00101" else '0';
+    write_registers(6) <= write_new_value(0) when first_reg = "00110" else '0';
+    write_registers(7) <= write_new_value(0) when first_reg = "00111" else '0';
+    write_registers(8) <= write_new_value(0) when first_reg = "01000" else '0';
+    write_registers(9) <= write_new_value(0) when first_reg = "01001" else '0';
+    write_registers(10) <= write_new_value(0) when first_reg = "01010" else '0';
+    write_registers(11) <= write_new_value(0) when first_reg = "01011" else '0';
+    write_registers(12) <= write_new_value(0) when first_reg = "01100" else '0';
+    write_registers(13) <= write_new_value(0) when first_reg = "01101" else '0';
+    write_registers(14) <= write_new_value(0) when first_reg = "01110" else '0';
+    write_registers(15) <= write_new_value(0) when first_reg = "01111" else '0';
+    write_registers(16) <= write_new_value(0) when first_reg = "10000" else '0';
+    write_registers(17) <= write_new_value(0) when first_reg = "10001" else '0';
+    write_registers(18) <= write_new_value(0) when first_reg = "10010" else '0';
+    write_registers(19) <= write_new_value(0) when first_reg = "10011" else '0';
+    write_registers(20) <= write_new_value(0) when first_reg = "10100" else '0';
+    write_registers(21) <= write_new_value(0) when first_reg = "10101" else '0';
+    write_registers(22) <= write_new_value(0) when first_reg = "10110" else '0';
+    write_registers(23) <= write_new_value(0) when first_reg = "10111" else '0';
+    write_registers(24) <= write_new_value(0) when first_reg = "11000" else '0';
+    write_registers(25) <= write_new_value(0) when first_reg = "11001" else '0';
+    write_registers(26) <= write_new_value(0) when first_reg = "11010" else '0';
+    write_registers(27) <= write_new_value(0) when first_reg = "11011" else '0';
+    write_registers(28) <= write_new_value(0) when first_reg = "11100" else '0';
+    write_registers(29) <= write_new_value(0) when first_reg = "11101" else '0';
+    write_registers(30) <= write_new_value(0) when first_reg = "11110" else '0';
+    write_registers(31) <= write_new_value(0) when first_reg = "11111" else '0';
 
     /*
     Write enable signals for 16 bit register pairs. Even address is used for
-    writing register pairs.
+    writing register pairs which is achieved by not using one LSB bit.
     TODO: Use constants instead of hard coded values.
     */
     write_register_pair <= write_new_value(1) & write_new_value(1);
