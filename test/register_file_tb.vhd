@@ -5,6 +5,7 @@ library osvvm;
 use ieee.std_logic_1164.all;
 use osvvm.TbUtilPkg.all;
 context vunit_lib.vunit_context;
+use work.common_pkg.all;
 
 
 entity register_file_tb is
@@ -87,23 +88,46 @@ begin
                 check_equal(first_reg_value, std_logic_vector'(x"1177"));
             elsif run("write_and_read_register_pair") then
                 new_value <= x"1111";
-                first_reg <= "00001";
+                first_reg <= "00010";
                 write_new_value(1) <= '1';
                 wait until rising_edge(clk);
                 wait until falling_edge(clk);
 
                 check_equal(first_reg_value, std_logic_vector'(x"1111"));
-            elsif run("read_two_registers_simultaneously") then
-                -- TODO: Finish up
-                new_value <= x"1122";
-                first_reg <= "00001";
-                second_reg <= "0002";
+            elsif run("read_two_register_pairs_simultaneously") then
+                /* Write two registers pairs and read them back */
+                new_value <= x"1111";
+                first_reg <= "00010";
                 write_new_value(1) <= '1';
                 wait until rising_edge(clk);
+                new_value <= x"2222";
+                first_reg <= "00100";
+                wait until rising_edge(clk);
+                first_reg <= "00010";
+                second_reg <= "0010";
                 wait until falling_edge(clk);
 
                 check_equal(first_reg_value, std_logic_vector'(x"1111"));
-                check_equal(second_reg_value, std_logic_vector'(x"1111"));
+                check_equal(second_reg_value, std_logic_vector'(x"2222"));
+            elsif run("write_and_read_register_as_io_memory") then
+                new_value <= x"1111";
+                write_memory <= '1';
+                immediate <= x"0001";
+                addressing_mode <= MODE_ABSOLUTE;
+                wait until rising_edge(clk);
+                wait until falling_edge(clk);
+
+                check_equal(register_value, std_logic_vector'(x"11"));
+            elsif run("read_memory_with_stack_pointer_addressing") then
+                report "TODO";
+                new_value <= x"1111";
+                write_memory <= '1';
+                immediate <= x"0001";
+                addressing_mode <= MODE_SP_ADD_1;
+                wait until rising_edge(clk);
+                wait until falling_edge(clk);
+
+                check_equal(register_value, std_logic_vector'(x"11"));
             end if;
         end loop;
         test_runner_cleanup(runner);

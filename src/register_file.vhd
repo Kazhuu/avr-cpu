@@ -3,7 +3,11 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use work.common_pkg.all;
 
-
+/*
+TODO: write_new_value signal can be separated to two different signals. First
+bit controls writing value from first_reg and second bit controls writing
+value from second_reg signal.
+*/
 entity register_file is
     port(
         clk : in std_logic;
@@ -336,9 +340,13 @@ begin
     xyzsp_new_value <= std_logic_vector(signed(addressing_base_value) + signed(post_value));
     register_address <= std_logic_vector(signed(addressing_base_value) + signed(pre_value));
 
+    -- Memory address points to one 32 general purpose registers 0x00 - 0x1F.
     write_register_address <= write_memory when register_address(15 downto 5) = "00000000000" else '0';
+    -- Memory address points to status register.
     write_status_register <= write_memory when register_address = STATUS_REGISTER_ADDR else '0';
+    -- TODO: What this line does? And rename variables better.
     l_we_sp_amod <= write_xyzs when addressing_mode(2 downto 0) = ADDRESS_SOURCE_SP else '0';
+    -- Memory address points to stack pointer low or high byte.
     write_stack_pointer(1) <= write_memory when register_address = STACK_POINTER_HIGH_ADDR else l_we_sp_amod;
     write_stack_pointer(0) <= write_memory when register_address = STACK_POINTER_LOW_ADDR else l_we_sp_amod;
 
@@ -390,7 +398,7 @@ begin
 
     /*
     Write enable signals for 16 bit register pairs. Even address is used for
-    writing register pairs which is achieved by not using one LSB bit.
+    writing register pairs.
     TODO: Use constants instead of hard coded values.
     */
     write_register_pair <= write_new_value(1) & write_new_value(1);
