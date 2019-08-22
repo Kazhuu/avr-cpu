@@ -53,9 +53,9 @@ architecture behavioral of register_file is
     signal register20 : std_logic_vector(15 downto 0);
     signal register22 : std_logic_vector(15 downto 0);
     signal register24 : std_logic_vector(15 downto 0);
-    signal register26 : std_logic_vector(15 downto 0);
-    signal register28 : std_logic_vector(15 downto 0);
-    signal register30 : std_logic_vector(15 downto 0);
+    signal register26 : std_logic_vector(15 downto 0); -- X register
+    signal register28 : std_logic_vector(15 downto 0); -- Y register
+    signal register30 : std_logic_vector(15 downto 0); -- Z register
     signal stack_pointer_register : std_logic_vector(15 downto 0);
 
     signal status_register : std_logic_vector(7 downto 0);
@@ -304,8 +304,8 @@ begin
     end process;
 
     /*
-    the value of the x/y/z/sp register after a potential pre-inc/decrement
-    (by 1 or 2) and post-inc/decrement (by 1 or 2).
+    The value of the x/y/z/sp register after a potential pre-inc/decrement
+    by 1 or 2 and post-inc/decrement by 1 or 2.
     */
     process(addressing_mode, immediate)
     begin

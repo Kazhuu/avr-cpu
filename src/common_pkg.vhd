@@ -42,6 +42,15 @@ package common_pkg is
     constant PC_SKIP_T : std_logic_vector(2 downto 0) := "110"; -- SKIP if T
 
     /*
+    Addressing mode constants. Address mode consist of two subfields with
+    following coding for bits:
+    bits | coding
+    –––––––––––––––
+    0-2  | address source
+    3    | if set, source is updated as a side effect
+    4-5  | address offset
+    */
+    /*
     Addressing mode source which is used for the end address calculation.
     Possible sources are Z, Y, X, stack pointer or immediate value from the
     opcode.
@@ -53,9 +62,10 @@ package common_pkg is
     constant ADDRESS_SOURCE_IMMEDIATE : std_logic_vector(2 downto 0) := "100"; -- IMM
 
     /*
-    Addressing mode offset is used to modify the source value as a side effect.
-    Possible side effects are as is, add value from opcode, add 1 or 2, minus 1
-    or 2.
+    Addressing mode offset is used to modify the source value.
+    Possible updates are as is, add value from opcode, add 1 or 2, minus 1
+    or 2. If third bit is set, source will be dec/incremented by 1 or 2 as a side
+    effect when address is calculated.
     */
     constant ADDRESS_OFFSET_AS_IS : std_logic_vector(5 downto 3) := "000";     -- as is
     constant ADDRESS_OFFSET_ADD_VALUE : std_logic_vector(5 downto 3) := "010"; -- +q
@@ -66,7 +76,8 @@ package common_pkg is
 
     /*
     Constant to indicate if addressing source will be updated as a side
-    effect.
+    effect. Notice that a third bit is always set on this constant to indicate
+    update.
     */
     constant UPDATE_SOURCE_X : std_logic_vector(3 downto 0) := '1' & ADDRESS_SOURCE_X;   -- X ++ or --
     constant UPDATE_SOURCE_Y : std_logic_vector(3 downto 0) := '1' & ADDRESS_SOURCE_Y;   -- Y ++ or --

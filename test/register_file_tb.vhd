@@ -94,6 +94,14 @@ begin
                 wait until falling_edge(clk);
 
                 check_equal(first_reg_value, std_logic_vector'(x"1111"));
+            elsif run("read_z_register_output") then
+                new_value <= x"1234";
+                first_reg <= "11110";
+                write_new_value(1) <= '1';
+                wait until rising_edge(clk);
+                wait until falling_edge(clk);
+
+                check_equal(z_reg_value, std_logic_vector'(x"1234"));
             elsif run("read_two_register_pairs_simultaneously") then
                 /* Write two registers pairs and read them back */
                 new_value <= x"1111";
@@ -120,14 +128,59 @@ begin
                 check_equal(register_value, std_logic_vector'(x"11"));
             elsif run("read_memory_with_stack_pointer_addressing") then
                 report "TODO";
-                new_value <= x"1111";
+                new_value <= x"0001";
                 write_memory <= '1';
-                immediate <= x"0001";
+                immediate <= x"005D"; -- stack pointer low byte address
+                addressing_mode <= MODE_ABSOLUTE;
+                wait until rising_edge(clk);
+                wait until falling_edge(clk);
+                write_memory <= '0';
                 addressing_mode <= MODE_SP_ADD_1;
                 wait until rising_edge(clk);
                 wait until falling_edge(clk);
 
-                check_equal(register_value, std_logic_vector'(x"11"));
+                check_equal(register_value, std_logic_vector'(x"01"));
+            elsif run("address_source_x_post_increment") then
+                new_value <= x"1100";
+                first_reg <= "11010"; -- X register address.
+                write_new_value(1) <= '1';
+                wait until rising_edge(clk);
+                wait until falling_edge(clk);
+                write_new_value(1) <= '0';
+                write_xyzs <= '1'; -- X incremented as a side effect.
+                addressing_mode <= MODE_X_POST_INC;
+                wait until rising_edge(clk);
+                wait until falling_edge(clk);
+
+                check_equal(first_reg_value, std_logic_vector'(x"1101"));
+            elsif run("address_source_y_pre_decrement") then
+                new_value <= x"1100";
+                first_reg <= "11100"; -- Y register address.
+                write_new_value(1) <= '1';
+                wait until rising_edge(clk);
+                wait until falling_edge(clk);
+                write_new_value(1) <= '0';
+                write_xyzs <= '1'; -- Y decrement as a side effect.
+                addressing_mode <= MODE_Y_PRE_DEC;
+                wait until rising_edge(clk);
+                wait until falling_edge(clk);
+
+                check_equal(first_reg_value, std_logic_vector'(x"10FF"));
+            elsif run("address_source_z_add_immediate_value") then
+                report "TODO";
+                new_value <= x"1100";
+                first_reg <= "11110"; -- Z register address.
+                write_new_value(1) <= '1';
+                wait until rising_edge(clk);
+                wait until falling_edge(clk);
+                write_new_value(1) <= '0';
+                write_xyzs <= '1'; -- Value added to Z as a side effect.
+                immediate <= x"0003"; -- Immediate value to be added to Z.
+                addressing_mode <= MODE_Z_ADD_VAL;
+                wait until rising_edge(clk);
+                wait until falling_edge(clk);
+
+                check_equal(first_reg_value, std_logic_vector'(x"1103"));
             end if;
         end loop;
         test_runner_cleanup(runner);
